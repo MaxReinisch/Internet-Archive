@@ -31,7 +31,7 @@ def getSuggestedTVNewsClips(search_result):
     url = 'https://api.gdeltproject.org/api/v2/tv/tv?query='+query+ '%20market:%22National%22&mode=clipgallery&format=json&datanorm=perc&timelinesmooth=0&datacomb=sep&last24=yes&timezoom=yes&TIMESPAN=14days#'
 
     res = requests.get(url)
-    print("api status code:", res.status_code)
+    print("GDELT status code:", res.status_code)
     df = pd.DataFrame(json.loads(res.text)['clips'])
 
     snippet_matrix = df.snippet.as_matrix()
@@ -61,7 +61,7 @@ def getQueryFromArticle(article_url):
 
     header = {"Accept-Encoding": "gzip", "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64)"}
     res = requests.get(url, headers=header )
-    print(res.status_code)
+    print("article status code:", res.status_code)
     if res.status_code == 403:
         print("Try changing User-Agent")
         exit(-1)
@@ -81,11 +81,13 @@ def getQueryFromArticle(article_url):
 
     # Using openCalais for entity extraction
     response = requests.post(calais_url, data=body.encode('utf-8'), headers=headers, timeout=80)
+    print("OpenCalais status code:", response.status_code)
     content = response.text
 
     c = json.loads(content)
+    topics = list(c.keys())[1:]
 
-    tags = getTags(c)
+    tags = getEntities(c)
 
     df = pd.DataFrame(tags)
 
@@ -94,22 +96,23 @@ def getQueryFromArticle(article_url):
     search_result = {"POI": POI, "document": body, "title": title, "subtitle": subtitle, "author": author}
     return search_result
 
-def getTags(c):
+def getEntities(c):
     """
     returns list of possible search query entities given the contents from
     OpenCalais response
     """
-    topics = list(c.keys())[1:]
+
     tags = []
-    for topic in topics:
-        if c[topic]['_typeGroup'] == "entities":
+
+    for key, value in c.items():
+        if value.get('_typeGroup') == "entities":
             new_entity = {}
-            new_entity['name'] = c[topic]['name']
-            new_entity['mentions'] = len(c[topic]['instances'])
-            new_entity['type'] = c[topic]['_type']
+            new_entity['name'] = value['name']
+            new_entity['mentions'] = len(value['instances'])
+            new_entity['type'] = value['_type']
             if(new_entity['type'] == "Person"):
     #             print(new_entity['name'])
-                new_entity['commonname'] = c[topic]['commonname']
+                new_entity['commonname'] = value['commonname']
             else:
                 new_entity['commonname'] = ""
             tags.append(new_entity)
