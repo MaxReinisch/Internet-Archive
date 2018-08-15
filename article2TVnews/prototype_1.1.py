@@ -22,31 +22,58 @@ def main():
         url = 'https://www.huffingtonpost.com/entry/kansas-democrat-brent-welder-ad_us_5b625d65e4b0b15aba9f9774'
     search_result = getQueryFromArticle(url)
     video_list = getSuggestedTVNewsClips(search_result)
-    # for video_url in video_list:
-    #     print(video_url)
+
 
 def getSuggestedTVNewsClips(search_result):
-    query = " ".join(search_result['POI'])
+    """
+    requests the GDELT API to get tv news clips, and then sorts them by relevance
+    """
 
-    url = 'https://api.gdeltproject.org/api/v2/tv/tv?query='+query+ '%20market:%22National%22&mode=clipgallery&format=json&datanorm=perc&timelinesmooth=0&datacomb=sep&last24=yes&timezoom=yes&TIMESPAN=14days#'
+    #Requests GDELT
+    successfulSearch = False
+    people = search_result['POI']
+    while(not successfulSearch):
 
-    res = requests.get(url)
-    print("GDELT status code:", res.status_code)
-    df = pd.DataFrame(json.loads(res.text)['clips'])
+        ### Tries the most specific search query that gets some result.
+        query = " ".join(people)
 
+        url = 'https://api.gdeltproject.org/api/v2/tv/tv?query='+query+ '%20market:%22National%22&mode=clipgallery&format=json&datanorm=perc&timelinesmooth=0&datacomb=sep&last24=yes&timezoom=yes&TIMESPAN=14days#'
+
+        res = requests.get(url)
+
+
+        gdelt_json = json.loads(res.text)
+        if len(gdelt_json.keys()) ==0:
+            people = people[0:-1]
+        elif len(gdelt_json['clips']) < 5:
+            people = people[0:-1]
+        else:
+            successfulSearch = True
+            print("GDELT status code:", res.status_code)
+            print("search query:",query)
+
+    # Save GDELT result in dataframe
+    df = pd.DataFrame(gdelt_json.get('clips'))
+
+    # Vectorize snippets to bag of words
     snippet_matrix = df.snippet.as_matrix()
-    snippet_matrix.put(0, search_result['document'])
+    snippet_matrix.put(0, search_result['document'])  # put article text in snippet matrix.  This is kinda hackey but gets the job done
     vectorizer = TfidfVectorizer(stop_words="english", ngram_range=(1,2) )
     bow = vectorizer.fit_transform(snippet_matrix)
     bow_df = pd.DataFrame(bow.todense(), columns=vectorizer.get_feature_names())
 
+    # compute pairwize cosine distances
     distances = pairwise_distances(bow, metric='cosine')
     distance_df = pd.DataFrame(distances, index=bow_df.index, columns=bow_df.index)
     distance_df.head()
 
+    # prints in order of most similar to article
     order = distance_df.loc[0, :].sort_values(ascending=True).index
     for i in order:
         print(df.loc[i, ["show", "preview_url"]]['preview_url'])
+
+
+
 def getQueryFromArticle(article_url):
     """
     Takes in an article URL and returns its parsed contents, as well as a recommended search query
