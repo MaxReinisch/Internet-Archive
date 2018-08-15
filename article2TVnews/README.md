@@ -1,6 +1,7 @@
 # Article to TV News clips
 
 - [files](#files)
+- [how it works](#hiw)
 - [instructions](#instructions)
 - [todo](#todo)
 
@@ -9,6 +10,19 @@
 
 The jupyter notebook files (.ipynb) are used for testing.  All relevant code
 has been refactored into `prototype_1.1.py`.
+
+<a id='hiw'></a>
+### How It Works:
+
+- Requests news article URL
+  - extracts `title`, `author`, `fulltext`, etc
+- Requests `OpenCalais` for NLP entity extraction
+  - generates search query using entities
+- Requests `GDELT` using search query
+  - results include TV news clips
+  - sort news clips using cosine distance between article text and TV closed captions
+
+
 <a id='instructions'></a>
 ### Instructions:
 
