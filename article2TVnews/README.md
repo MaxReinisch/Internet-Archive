@@ -8,8 +8,9 @@
 <a id='files'></a>
 ### Files:
 
-The jupyter notebook files (.ipynb) are used for testing.  All relevant code
-has been refactored into `prototype_1.1.py`.
+- The jupyter notebook files (.ipynb) are used for testing.  
+- `prototype_1.1.py` is a proof of concept.  Mostly spaghetti code
+All relevant code has been refactored into `NewsRecommenderV2.py`.
 
 <a id='hiw'></a>
 ### How It Works:
@@ -29,7 +30,7 @@ has been refactored into `prototype_1.1.py`.
 To run the program, simply call:
 
 
-`python prototype_1.1.py <article_url>`
+`python NewsRecommenderV2.py <article_url>`
 
 
 
