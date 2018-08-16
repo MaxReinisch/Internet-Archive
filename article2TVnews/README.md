@@ -10,7 +10,7 @@
 
 - The jupyter notebook files (.ipynb) are used for testing.  
 - `prototype_1.1.py` is a proof of concept.  Mostly spaghetti code
-All relevant code has been refactored into `NewsRecommenderV2.py`.
+- All relevant code has been refactored into `NewsRecommenderV2.py`.
 
 <a id='hiw'></a>
 ### How It Works:
